@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trip Wallet</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+        h1 {
+            color: #007bff;
+        }
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+        th, td {
+            padding: 8px;
+            text-align: left;
+            border-bottom: 1px solid #ddd;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+        .input-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+        .input-group {
+            display: inline-block;
+            margin-right: 10px;
+        }
+        .input-group input[type="text"],
+        .input-group input[type="number"] {
+            padding: 5px;
+            width: 120px;
+        }
+        .btn {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+</head>
+<body>
+    <h1>Trip Wallet</h1>
+    <p>A smart way of keeping track of spending on a trip with friends and family.</p>
+    <table>
+        <tr>
+            <th>No</th>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>Calculation</th>
+            <th></th>
+            <th></th>
+        </tr>
+        {% for entry in table_data %}
+        <tr id="entry-{{ entry.id }}">
+            <td>{{ entry.no }}</td>
+            <td>{{ entry.name }}</td>
+            <td>{{ entry.amount }}</td>
+            <td>{{ '%.2f' % entry.calculation }}</td>
+            <td>
+                <form onsubmit="updateEntry(event, {{ entry.id }})">
+                    <input type="number" name="newAmount" placeholder="New Amount" required>
+                    <button class="btn" type="submit">Update</button>
+                </form>
+            </td>
+            <td>
+                <form onsubmit="deleteEntry(event, {{ entry.id }})">
+                    <button class="btn" type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    
+    <div class="input-container">
+        <div class="input-group">
+            <input type="text" id="name" placeholder="Name">
+        </div>
+        <div class="input-group">
+            <input type="number" id="amount" placeholder="Amount">
+        </div>
+        <button class="btn" onclick="addEntry()">Add</button>
+    </div>
+    <script>
+        function addEntry() {
+            var nameInput = document.getElementById('name');
+            var amountInput = document.getElementById('amount');
+
+            var name = nameInput.value;
+            var amount = parseFloat(amountInput.value);
+
+            if (name && amount) {
+                fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'name': name,
+                        'amount': amount,
+                    }),
+                })
+                .then(function(response) {
+                    if (response.ok) {
+                        nameInput.value = '';
+                        amountInput.value = '';
+                        location.reload();
+                    }
+                });
+            }
+        }
+
+        function updateEntry(event, entryId) {
+        event.preventDefault();
+        var form = event.target;
+        var newAmount = form.newAmount.value;
+
+        fetch('/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'id': entryId,
+                'newAmount': newAmount,
+            }),
+        })
+        .then(function(response) {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+
+    function deleteEntry(event, entryId) {
+        event.preventDefault();
+
+        fetch('/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'id': entryId,
+            }),
+        })
+        .then(function(response) {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+    </script>
+</body>
+</html>

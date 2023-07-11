@@ -4,6 +4,8 @@ from flask_sqlalchemy import SQLAlchemy
 app = Flask(__name__)
 app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///trip_wallet.db'
 db = SQLAlchemy(app)
+with app.app_context():
+    db.create_all()
 
 
 class Entry(db.Model):
@@ -92,3 +94,4 @@ def delete_entry():
         db.session.commit()
 
     return jsonify({'message': 'Entry deleted successfully'})
+

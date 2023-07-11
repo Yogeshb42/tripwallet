@@ -52,4 +52,3 @@ def update(no):
     todo = Todo.query.filter_by(no=no).first()
     return render_template('update.html',todo=todo)
 
-app.run()

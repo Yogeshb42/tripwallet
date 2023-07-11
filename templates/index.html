@@ -1,69 +1,183 @@
-{% extends 'base.html' %}
-{% block body %}
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Trip Wallet</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <style>
+        /* ... Your original styles ... */
         
-       
-    <div class="container my-3">
-        <h2>Add a To Do</h2>
-        <form action="/" method="POST">
-            <div class="mb-3">
-              <label for="title" class="form-label">To Do Title</label>
-              <input type="text" class="form-control" name="title" id="title" aria-describedby="emailHelp">
-            </div>
-            <div class="mb-3">
-              <label for="desc" class="form-label">To Do Description</label>
-              <input type="text" class="form-control" name="desc" id="desc">
-            </div>
-            <button type="submit" class="btn btn-outline-dark">Submit</button>
-          </form>
+        body {
+            font-family: Arial, sans-serif;
+            text-align: center;
+        }
+    
+        h1 {
+            color: #007bff;
+        }
+    
+        table {
+            border-collapse: collapse;
+            width: 100%;
+            margin-bottom: 20px;    
+        }
+    
+        th, td {
+            padding: 12px;
+            text-align: center;
+            border-bottom: 1px solid #ddd;
+        }
+    
+        th {
+            background-color: #f2f2f2;
+        }
+    
+        .input-container {
+            text-align: center;
+            margin-top: 20px;
+        }
+    
+        .input-group {
+            display: inline-block;
+            margin-right: 10px;
+        }
+    
+        .input-group input[type="text"],
+        .input-group input[type="number"] {
+            padding: 5px;
+            width: 120px;
+        }
+    
+        .btn {
+            padding: 5px 10px;
+            background-color: #007bff;
+            color: #fff;
+            border: none;
+            cursor: pointer;
+        }
+    
+        .btn:hover {
+            background-color: #0056b3;
+        }
+    </style>
+    
+    
+</head>
+<body>
+    <h1>Trip Wallet</h1>
+    <p>A smart way of keeping track of spending on a trip with friends and family.</p>
+    <table>
+        <tr>
+            <th>No</th>
+            <th>Name</th>
+            <th>Amount</th>
+            <th>Calculation</th>
+            <th>Settlement</th> <!-- New column -->
+            <th></th>
+            <th></th>
+        </tr>
+        {% for entry in table_data %}
+        <tr id="entry-{{ entry.id }}">
+            <td>{{ entry.no }}</td>
+            <td>{{ entry.name }}</td>
+            <td>{{ entry.amount }}</td>
+            <td>{{ '%.2f' % entry.calculation }}</td>
+            <td>{{ entry.settlement }}</td> <!-- Display settlement value -->
+            <td>
+                <form onsubmit="updateEntry(event, {{ entry.id }})">
+                    <input type="number" name="newAmount" placeholder="New Amount" required>
+                    <button class="btn" type="submit">Update</button>
+                </form>
+            </td>
+            <td>
+                <form onsubmit="deleteEntry(event, {{ entry.id }})">
+                    <button class="btn" type="submit">Delete</button>
+                </form>
+            </td>
+        </tr>
+        {% endfor %}
+    </table>
+    
+    
+    
+    <div class="input-container">
+        <div class="input-group">
+            <input type="text" id="name" placeholder="Name">
+        </div>
+        <div class="input-group">
+            <input type="number" id="amount" placeholder="Amount">
+        </div>
+        <button class="btn" onclick="addEntry()">Add</button>
     </div>
+    <script>
+        function addEntry() {
+            var nameInput = document.getElementById('name');
+            var amountInput = document.getElementById('amount');
 
-    <div class="container my-3">
-        <h2>Your To Dos</h2>
-        
-                {% if allTodo|length == 0 %}
-                <div class="alert alert-dark" role="alert">
-                    No Todos found. Add your first Todo now!
+            var name = nameInput.value;
+            var amount = parseFloat(amountInput.value);
 
-                </div>
-                    {% else %}
-                    <table class="table">
-                        <thead>
-                          <tr>
-                            <th scope="col">No</th>
-                            <th scope="col">Title</th>
-                            <th scope="col">Description</th>
-                            <th scope="col">Time</th>
-                            <th scope="col">Actions</th>
-                          </tr>
-                        </thead>
-            <tbody>
-              {% for todo in allTodo %}
-              <tr>
-                <th scope="row">{{loop.index}}</th>
-                <td>{{todo.title}}</td>
-                <td>{{todo.desc}}</td>
-                <td>{{todo.date_created}}</td>
-                <td>
-                    <a href="/update/{{todo.no}}" type="button" class="btn btn-outline-dark btn-sm mx-1">Update</button>
-                    <a href="/delete/{{todo.no}}" type="button" class="btn btn-outline-dark btn-sm mx-1">Delete</button>
-                </td>
-              </tr> 
-              {% endfor %}  
-              {% endif %} 
-            
-            </tbody>
-          </table>
-    </div>
-    <!-- Optional JavaScript; choose one of the two! -->
+            if (name && amount) {
+                fetch('/', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/x-www-form-urlencoded',
+                    },
+                    body: new URLSearchParams({
+                        'name': name,
+                        'amount': amount,
+                    }),
+                })
+                .then(function(response) {
+                    if (response.ok) {
+                        nameInput.value = '';
+                        amountInput.value = '';
+                        location.reload();
+                    }
+                });
+            }
+        }
 
-    <!-- Option 1: Bootstrap Bundle with Popper -->
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"
-        integrity="sha384-MrcW6ZMFYlzcLA8Nl+NtUVF0sA7MsXsP1UyJoMp4YLEuNSfAP+JcXn/tWtIaxVXM"
-        crossorigin="anonymous"></script>
+        function updateEntry(event, entryId) {
+        event.preventDefault();
+        var form = event.target;
+        var newAmount = form.newAmount.value;
 
-    <!-- Option 2: Separate Popper and Bootstrap JS -->
-    <!--
-    <script src="https://cdn.jsdelivr.net/npm/@popperjs/core@2.9.2/dist/umd/popper.min.js" integrity="sha384-IQsoLXl5PILFhosVNubq5LC7Qb9DXgDA9i+tQ8Zj3iwWAwPtgFTxbJ8NT4GN1R8p" crossorigin="anonymous"></script>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.min.js" integrity="sha384-cVKIPhGWiC2Al4u+LWgxfKTRIcfu0JTxR+EQDz/bgldoEyl4H0zUF0QKbrJ0EcQF" crossorigin="anonymous"></script>
-    -->
-{% endblock body %}
+        fetch('/update', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'id': entryId,
+                'newAmount': newAmount,
+            }),
+        })
+        .then(function(response) {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+
+    function deleteEntry(event, entryId) {
+        event.preventDefault();
+
+        fetch('/delete', {
+            method: 'POST',
+            headers: {
+                'Content-Type': 'application/x-www-form-urlencoded',
+            },
+            body: new URLSearchParams({
+                'id': entryId,
+            }),
+        })
+        .then(function(response) {
+            if (response.ok) {
+                location.reload();
+            }
+        });
+    }
+    </script>
+</body>
+</html>
